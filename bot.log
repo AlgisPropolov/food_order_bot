@@ -1,0 +1,32 @@
+2025-05-29 00:52:38,510 - handlers - ERROR - Failed to register handlers: cannot import name 'register_admin_handlers' from 'handlers.admin' (C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\admin.py)
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 25, in register_all_handlers
+    from .admin import register_admin_handlers  # Новый модуль
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ImportError: cannot import name 'register_admin_handlers' from 'handlers.admin' (C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\admin.py)
+2025-05-29 00:52:38,511 - __main__ - CRITICAL - ⛔ Критическая ошибка: Failed to register some handlers
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\main.py", line 45, in main
+    register_handlers(dp)
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 51, in register_handlers
+    raise RuntimeError("Failed to register some handlers")
+RuntimeError: Failed to register some handlers
+2025-05-29 00:52:38,512 - __main__ - INFO - Сессия бота корректно закрыта
+2025-05-29 01:01:03,357 - handlers.admin - INFO - Admin handlers registered successfully
+2025-05-29 01:01:03,357 - handlers - INFO - All handlers registered successfully
+2025-05-29 01:01:03,357 - aiogram.dispatcher - INFO - Start polling
+2025-05-29 01:01:07,143 - aiogram.dispatcher - INFO - Run polling for bot @iikofood_bot id=7240274087 - 'Бот для доставки'
+2025-05-29 01:01:32,718 - aiogram.event - INFO - Update id=456114703 is handled. Duration 264 ms by bot id=7240274087
+2025-05-29 01:01:53,242 - aiogram.dispatcher - INFO - Polling stopped
+2025-05-29 01:01:53,510 - __main__ - INFO - Сессия бота корректно закрыта
+2025-05-29 01:01:53,511 - aiogram.dispatcher - INFO - Polling stopped for bot @iikofood_bot id=7240274087 - 'Бот для доставки'
+2025-05-29 01:01:53,511 - __main__ - INFO - Бот остановлен вручную
+2025-05-29 01:05:18,180 - handlers.admin - INFO - Admin handlers registered successfully
+2025-05-29 01:05:18,181 - handlers - INFO - All handlers registered successfully
+2025-05-29 01:05:18,181 - aiogram.dispatcher - INFO - Start polling
+2025-05-29 01:05:18,368 - aiogram.dispatcher - INFO - Run polling for bot @iikofood_bot id=7240274087 - 'Бот для доставки'
+2025-05-29 01:05:23,216 - aiogram.event - INFO - Update id=456114704 is handled. Duration 233 ms by bot id=7240274087
+2025-05-29 01:05:32,239 - aiogram.dispatcher - INFO - Polling stopped
+2025-05-29 01:05:32,499 - __main__ - INFO - Сессия бота корректно закрыта
+2025-05-29 01:05:32,499 - aiogram.dispatcher - INFO - Polling stopped for bot @iikofood_bot id=7240274087 - 'Бот для доставки'
+2025-05-29 01:05:32,504 - __main__ - INFO - Бот остановлен вручную

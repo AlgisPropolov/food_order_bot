@@ -1,17 +1,18 @@
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from config.config import Config
 from handlers import register_handlers
 import logging
 import asyncio
 
-# Настройка логирования
+# Настройка логирования с поддержкой Unicode
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("bot.log"),  # Логи в файл
-        logging.StreamHandler()  # Логи в консоль
+        logging.FileHandler("bot.log", encoding='utf-8'),
+        logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
@@ -20,21 +21,21 @@ logger = logging.getLogger(__name__)
 async def on_startup():
     """Действия при запуске бота"""
     logger.info("✅ Бот успешно запущен")
-    # Здесь можно добавить дополнительные действия при запуске
-    # Например: уведомление админа, загрузку данных и т.д.
 
 
 async def on_shutdown():
     """Действия при завершении работы"""
     logger.info("⛔ Бот завершает работу")
-    # Здесь можно добавить cleanup-действия
 
 
 async def main():
     """Основная асинхронная функция запуска бота"""
     try:
         # Инициализация бота с HTML-разметкой по умолчанию
-        bot = Bot(token=Config.BOT_TOKEN, parse_mode="HTML")
+        bot = Bot(
+            token=Config.BOT_TOKEN,
+            default=DefaultBotProperties(parse_mode="HTML")
+        )
 
         # Настройка хранилища состояний
         storage = MemoryStorage()
@@ -49,7 +50,6 @@ async def main():
             on_startup=on_startup,
             on_shutdown=on_shutdown,
             skip_updates=True,
-            allowed_updates=dp.resolve_used_update_types(),
             close_bot_session=True
         )
     except Exception as e:
