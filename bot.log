@@ -30,3 +30,67 @@ RuntimeError: Failed to register some handlers
 2025-05-29 01:05:32,499 - __main__ - INFO - Сессия бота корректно закрыта
 2025-05-29 01:05:32,499 - aiogram.dispatcher - INFO - Polling stopped for bot @iikofood_bot id=7240274087 - 'Бот для доставки'
 2025-05-29 01:05:32,504 - __main__ - INFO - Бот остановлен вручную
+2025-05-29 10:35:54,400 - handlers - ERROR - Failed to register handlers: cannot import name 'get_user_by_id' from 'database.crud' (C:\Users\user\Documents\GitHub\Task\food_order_bot\database\crud.py)
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 25, in register_all_handlers
+    from .admin import register_admin_handlers  # Новый модуль
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\admin.py", line 11, in <module>
+    from database.crud import (
+ImportError: cannot import name 'get_user_by_id' from 'database.crud' (C:\Users\user\Documents\GitHub\Task\food_order_bot\database\crud.py)
+2025-05-29 10:35:54,402 - __main__ - CRITICAL - ⛔ Критическая ошибка: Failed to register some handlers
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\main.py", line 45, in main
+    register_handlers(dp)
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 51, in register_handlers
+    raise RuntimeError("Failed to register some handlers")
+RuntimeError: Failed to register some handlers
+2025-05-29 10:35:54,402 - __main__ - INFO - Сессия бота корректно закрыта
+2025-05-29 11:44:01,982 - handlers - ERROR - Failed to register handlers: cannot import name 'get_user_by_id' from 'database.crud' (C:\Users\user\Documents\GitHub\Task\food_order_bot\database\crud.py)
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 25, in register_all_handlers
+    from .admin import register_admin_handlers  # Новый модуль
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\admin.py", line 11, in <module>
+    from database.crud import (
+ImportError: cannot import name 'get_user_by_id' from 'database.crud' (C:\Users\user\Documents\GitHub\Task\food_order_bot\database\crud.py)
+2025-05-29 11:44:01,984 - __main__ - CRITICAL - ⛔ Критическая ошибка: Failed to register some handlers
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\main.py", line 45, in main
+    register_handlers(dp)
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 51, in register_handlers
+    raise RuntimeError("Failed to register some handlers")
+RuntimeError: Failed to register some handlers
+2025-05-29 11:44:01,985 - __main__ - INFO - Сессия бота корректно закрыта
+2025-05-29 15:34:46,609 - handlers - ERROR - Failed to register handlers: Invalid argument(s) 'pool_size','max_overflow' sent to create_engine(), using configuration SQLiteDialect_aiosqlite/NullPool/Engine.  Please check that the keyword arguments are appropriate for this combination of components.
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 25, in register_all_handlers
+    from .admin import register_admin_handlers  # Новый модуль
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\admin.py", line 6, in <module>
+    from keyboards.admin_kb import (
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\keyboards\admin_kb.py", line 3, in <module>
+    from database.models import UserRole
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\database\__init__.py", line 1, in <module>
+    from .session import sync_engine, async_engine, SessionLocal, AsyncSessionLocal, get_db, async_get_db
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\database\session.py", line 28, in <module>
+    async_engine = create_async_engine(
+                   ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\ext\asyncio\engine.py", line 117, in create_async_engine
+    sync_engine = _create_engine(url, **kw)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 2, in create_engine
+  File "C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\util\deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\user\AppData\Local\Programs\Python\Python311\Lib\site-packages\sqlalchemy\engine\create.py", line 688, in create_engine
+    raise TypeError(
+TypeError: Invalid argument(s) 'pool_size','max_overflow' sent to create_engine(), using configuration SQLiteDialect_aiosqlite/NullPool/Engine.  Please check that the keyword arguments are appropriate for this combination of components.
+2025-05-29 15:34:46,667 - __main__ - CRITICAL - ⛔ Критическая ошибка: Failed to register some handlers
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\main.py", line 45, in main
+    register_handlers(dp)
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\handlers\__init__.py", line 51, in register_handlers
+    raise RuntimeError("Failed to register some handlers")
+RuntimeError: Failed to register some handlers
+2025-05-29 15:34:46,668 - __main__ - INFO - Сессия бота корректно закрыта

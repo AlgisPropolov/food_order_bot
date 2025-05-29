@@ -1,18 +1,37 @@
-from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import select, update, delete, or_, and_, func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from .models import User, Order, UserRole, MenuCategory, MenuItem
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 # User CRUD Operations
-def get_or_create_user(db: Session, telegram_id: int, full_name: str, phone: str = None) -> User:
+async def get_user_by_id(session: AsyncSession, user_id: int) -> Optional[User]:
+    """Получение пользователя по ID"""
+    try:
+        result = await session.execute(
+            select(User)
+            .where(User.telegram_id == user_id)
+        )
+        return result.scalars().first()
+    except Exception as e:
+        logger.error(f"Error in get_user_by_id: {e}")
+        return None
+
+
+async def get_or_create_user(
+        session: AsyncSession,
+        telegram_id: int,
+        full_name: str,
+        phone: str = None
+) -> User:
     """Создает или возвращает существующего пользователя"""
     try:
-        user = db.query(User).filter(User.telegram_id == telegram_id).first()
+        user = await get_user_by_id(session, telegram_id)
         if not user:
             user = User(
                 telegram_id=telegram_id,
@@ -20,118 +39,176 @@ def get_or_create_user(db: Session, telegram_id: int, full_name: str, phone: str
                 phone=phone,
                 role=UserRole.CUSTOMER
             )
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+            session.add(user)
+            await session.commit()
+            await session.refresh(user)
         return user
     except Exception as e:
-        db.rollback()
+        await session.rollback()
         logger.error(f"Error in get_or_create_user: {e}")
         raise
 
 
-def update_user_role(db: Session, user_id: int, new_role: UserRole) -> Optional[User]:
+async def update_user_role(
+        session: AsyncSession,
+        user_id: int,
+        new_role: UserRole
+) -> Optional[User]:
     """Обновляет роль пользователя"""
     try:
-        user = db.query(User).filter(User.telegram_id == user_id).first()
+        user = await get_user_by_id(session, user_id)
         if user:
             user.role = new_role
-            db.commit()
-            db.refresh(user)
+            await session.commit()
+            await session.refresh(user)
         return user
     except Exception as e:
-        db.rollback()
+        await session.rollback()
         logger.error(f"Error in update_user_role: {e}")
         return None
 
 
-def search_users(db: Session, search_query: str) -> List[User]:
+async def search_users(
+        session: AsyncSession,
+        search_query: str,
+        limit: int = 50
+) -> List[User]:
     """Поиск пользователей по ID, имени или телефону"""
     try:
-        return db.query(User).filter(
-            or_(
-                User.telegram_id.cast(String).ilike(f"%{search_query}%"),
-                User.full_name.ilike(f"%{search_query}%"),
-                User.phone.ilike(f"%{search_query}%")
+        result = await session.execute(
+            select(User)
+            .where(
+                or_(
+                    User.telegram_id.cast(String).ilike(f"%{search_query}%"),
+                    User.full_name.ilike(f"%{search_query}%"),
+                    User.phone.ilike(f"%{search_query}%")
+                )
             )
-        ).limit(50).all()
+            .limit(limit)
+        )
+        return result.scalars().all()
     except Exception as e:
         logger.error(f"Error in search_users: {e}")
         return []
 
 
 # Order CRUD Operations
-def create_order(db: Session, user_id: int, items: List[dict]) -> Order:
+async def create_order(
+        session: AsyncSession,
+        user_id: int,
+        items: List[Dict[str, Any]],
+        status: str = "created"
+) -> Order:
     """Создает новый заказ"""
     try:
         order = Order(
             user_id=user_id,
             items=items,
-            status="created"
+            status=status
         )
-        db.add(order)
-        db.commit()
-        db.refresh(order)
+        session.add(order)
+        await session.commit()
+        await session.refresh(order)
         return order
     except Exception as e:
-        db.rollback()
+        await session.rollback()
         logger.error(f"Error in create_order: {e}")
         raise
 
 
-def get_orders_stats(db: Session, days: int = 7) -> dict:
+async def get_orders_stats(
+        session: AsyncSession,
+        days: int = 7
+) -> Dict[str, Any]:
     """Возвращает статистику заказов за последние N дней"""
     try:
         date_from = datetime.utcnow() - timedelta(days=days)
 
-        stats = {
-            "total_orders": db.query(Order).filter(Order.created_at >= date_from).count(),
-            "completed_orders": db.query(Order).filter(
+        # Получаем общее количество заказов
+        total_orders = await session.scalar(
+            select(func.count(Order.id))
+            .where(Order.created_at >= date_from)
+        )
+
+        # Получаем количество завершенных заказов
+        completed_orders = await session.scalar(
+            select(func.count(Order.id))
+            .where(
                 and_(
                     Order.created_at >= date_from,
                     Order.status == "completed"
                 )
-            ).count(),
-            "total_revenue": sum(
-                sum(item['price'] * item['quantity'] for item in order.items)
-                for order in db.query(Order).filter(
-                    and_(
-                        Order.created_at >= date_from,
-                        Order.status == "completed"
-                    )
-                ).all()
             )
+        )
+
+        # Получаем общую выручку
+        orders = await session.execute(
+            select(Order)
+            .where(
+                and_(
+                    Order.created_at >= date_from,
+                    Order.status == "completed"
+                )
+            )
+        )
+
+        total_revenue = sum(
+            sum(item['price'] * item['quantity'] for item in order.items)
+            for order in orders.scalars()
+        )
+
+        return {
+            "total_orders": total_orders or 0,
+            "completed_orders": completed_orders or 0,
+            "total_revenue": total_revenue or 0
         }
-        return stats
     except Exception as e:
         logger.error(f"Error in get_orders_stats: {e}")
-        return {}
+        return {
+            "total_orders": 0,
+            "completed_orders": 0,
+            "total_revenue": 0
+        }
 
 
 # Admin Menu Management
-def get_menu_categories(db: Session, active_only: bool = True) -> List[MenuCategory]:
+async def get_menu_categories(
+        session: AsyncSession,
+        active_only: bool = True
+) -> List[MenuCategory]:
     """Возвращает список категорий меню"""
     try:
-        query = db.query(MenuCategory)
+        query = select(MenuCategory)
         if active_only:
-            query = query.filter(MenuCategory.is_active == 1)
-        return query.all()
+            query = query.where(MenuCategory.is_active == True)
+
+        result = await session.execute(query)
+        return result.scalars().all()
     except Exception as e:
         logger.error(f"Error in get_menu_categories: {e}")
         return []
 
 
-def update_menu_item(db: Session, item_id: int, **kwargs) -> Optional[MenuItem]:
+async def update_menu_item(
+        session: AsyncSession,
+        item_id: int,
+        **kwargs
+) -> Optional[MenuItem]:
     """Обновляет данные позиции меню"""
     try:
-        item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
+        result = await session.execute(
+            select(MenuItem)
+            .where(MenuItem.id == item_id)
+        )
+        item = result.scalars().first()
+
         if item:
             for key, value in kwargs.items():
                 setattr(item, key, value)
-            db.commit()
-            db.refresh(item)
+            await session.commit()
+            await session.refresh(item)
         return item
     except Exception as e:
-        db.rollback()
+        await session.rollback()
         logger.error(f"Error in update_menu_item: {e}")
         return None
