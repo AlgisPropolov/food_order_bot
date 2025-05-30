@@ -1,71 +1,90 @@
 import os
 from dotenv import load_dotenv
-from typing import Dict, Any, Optional
+from typing import Dict, List
+from pydantic_settings import BaseSettings
+from pydantic import validator
 import logging
-
-# Настройка логирования
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 # Загрузка переменных окружения
 load_dotenv()
 
 
-class Config:
+class Settings(BaseSettings):
+    """Основной класс настроек приложения"""
+
     # Основные настройки бота
-    BOT_TOKEN: str = os.getenv("BOT_TOKEN", "")
-    ADMIN_IDS: list[int] = [
-        int(id_str) for id_str in os.getenv("ADMIN_IDS", "").split(",") if id_str
-    ]
+    BOT_TOKEN: str = ""
+    ADMIN_IDS: List[int] = []
 
-    # Настройки подключения к БД
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///database.db")
-    DB_ECHO: bool = os.getenv("DB_ECHO", "False").lower() == "true"
+    # Настройки базы данных
+    DATABASE_URL: str = "sqlite:///database.db"
+    DB_ECHO: bool = False
 
-    # Настройки интеграции с iiko
-    IIKO_API_URL: str = os.getenv("IIKO_API_URL", "https://api-ru.iiko.services")
-    IIKO_CREDENTIALS: Dict[str, Optional[str]] = {
-        "api_login": os.getenv("IIKO_API_LOGIN"),
-        "password": os.getenv("IIKO_API_PASSWORD"),
-        "organization_id": os.getenv("IIKO_ORG_ID"),
-    }
+    # Настройки iikoCloud API
+    IIKO_API_URL: str = "https://api-ru.iiko.services"
+    IIKO_API_LOGIN: str = ""
+    IIKO_API_PASSWORD: str = ""
+    IIKO_ORG_ID: str = ""
 
     # Настройки логирования
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_FILE: str = os.getenv("LOG_FILE", "bot.log")
+    LOG_LEVEL: str = "INFO"
+    LOG_FILE: str = "bot.log"
 
-    @classmethod
-    def validate(cls) -> bool:
-        """Проверка обязательных настроек"""
+    class Config:
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+    @validator("ADMIN_IDS", pre=True)
+    def parse_admin_ids(cls, v):
+        if isinstance(v, str):
+            return [int(id_str.strip()) for id_str in v.split(",") if id_str.strip()]
+        return v or []
+
+    @validator("DB_ECHO", pre=True)
+    def parse_db_echo(cls, v):
+        if isinstance(v, str):
+            return v.lower() == "true"
+        return v
+
+
+class Config:
+    """Обертка для удобного доступа к настройкам"""
+
+    def __init__(self):
+        self.settings = Settings()
+        self.validate()
+
+    def validate(self):
+        """Проверка обязательных параметров"""
         errors = []
 
-        if not cls.BOT_TOKEN:
+        if not self.settings.BOT_TOKEN:
             errors.append("Не указан BOT_TOKEN в .env")
 
-        if not cls.ADMIN_IDS:
+        if not self.settings.ADMIN_IDS:
             errors.append("Не указаны ADMIN_IDS в .env")
 
-        if not all(cls.IIKO_CREDENTIALS.values()):
+        required_iiko = [
+            self.settings.IIKO_API_LOGIN,
+            self.settings.IIKO_API_PASSWORD,
+            self.settings.IIKO_ORG_ID
+        ]
+
+        if not all(required_iiko):
             errors.append("Не все обязательные параметры для iiko API указаны")
 
         if errors:
             for error in errors:
-                logger.error(error)
-            logger.warning(f"Текущие настройки iiko: {cls.IIKO_CREDENTIALS}")
-            return False
-        return True
+                logging.error(error)
+            logging.warning(f"Текущие настройки iiko: {required_iiko}")
+            raise ValueError("Ошибка валидации конфигурации")
+
+        logging.info("Конфигурация успешно загружена")
 
 
-# Проверка конфигурации при импорте
-if not Config.validate():
-    logger.warning("Некоторые настройки не прошли валидацию!")
-
-# Для удобства импорта
-DATABASE_URL = Config.DATABASE_URL
-BOT_TOKEN = Config.BOT_TOKEN
-IIKO_CREDENTIALS = Config.IIKO_CREDENTIALS
-ADMIN_IDS = Config.ADMIN_IDS
-DB_ECHO = Config.DB_ECHO
+# Инициализация конфига
+try:
+    config = Config()
+except Exception as e:
+    logging.critical(f"Ошибка загрузки конфигурации: {e}")
+    raise

@@ -42,6 +42,18 @@ async def admin_start(message: Message):
         await message.answer("⚠️ Ошибка доступа к админ-панели")
 
 
+async def handle_back_to_admin(message: Message):
+    """Обработчик кнопки 'Назад' в админ-панели"""
+    try:
+        await message.answer(
+            "🛠 Возврат в панель администратора",
+            reply_markup=get_admin_keyboard()
+        )
+    except Exception as e:
+        logger.error(f"Error in handle_back_to_admin: {e}", exc_info=True)
+        await message.answer("⚠️ Ошибка возврата в админ-панель")
+
+
 async def handle_admin_stats(message: Message):
     """Обработчик статистики с реальными данными"""
     try:

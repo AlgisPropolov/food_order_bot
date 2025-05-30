@@ -1,64 +1,32 @@
 from aiogram import Dispatcher
-from typing import Optional
 import logging
+import importlib
+from typing import List
 
 logger = logging.getLogger(__name__)
 
 
-def register_all_handlers(dp: Dispatcher) -> bool:
-    """
-    Регистрация всех обработчиков бота с обработкой ошибок
-
-    Args:
-        dp: Экземпляр диспетчера aiogram
-
-    Returns:
-        bool: True если все обработчики зарегистрированы успешно, False при ошибке
-    """
-    try:
-        # Импорты обработчиков
-        from .start import register_start_handlers
-        from .menu import register_menu_handlers
-        from .order import register_order_handlers
-        from .cancel_order import register_cancel_handlers
-        from .faq import register_faq_handlers
-        from .admin import register_admin_handlers  # Новый модуль
-
-        # Регистрация обработчиков
-        register_start_handlers(dp)
-        register_menu_handlers(dp)
-        register_order_handlers(dp)
-        register_cancel_handlers(dp)
-        register_faq_handlers(dp)
-
-        # Попытка зарегистрировать административные обработчики
-        try:
-            register_admin_handlers(dp)
-        except ImportError:
-            logger.warning("Admin handlers not registered - module not found")
-
-        logger.info("All handlers registered successfully")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to register handlers: {e}", exc_info=True)
-        return False
-
-
 def register_handlers(dp: Dispatcher) -> None:
-    """Основная функция регистрации обработчиков (для обратной совместимости)"""
-    if not register_all_handlers(dp):
-        raise RuntimeError("Failed to register some handlers")
+    """Регистрация всех обработчиков"""
+    handler_modules = get_handler_modules()
+
+    for module_name in handler_modules:
+        try:
+            module = importlib.import_module(f"handlers.{module_name}")
+            register_func = getattr(module, f"register_{module_name}_handlers", None)
+
+            if register_func:
+                register_func(dp)
+                logger.info(f"Успешно зарегистрирован модуль {module_name}")
+            else:
+                logger.warning(f"Функция регистрации не найдена в {module_name}")
+
+        except ImportError as e:
+            logger.warning(f"Модуль {module_name} не найден: {e}")
+        except Exception as e:
+            logger.error(f"Ошибка в модуле {module_name}: {e}", exc_info=True)
 
 
-# Альтернативный вариант для поэтапной регистрации
-def get_handler_modules() -> list[str]:
-    """Возвращает список модулей с обработчиками"""
-    return [
-        'start',
-        'menu',
-        'order',
-        'cancel_order',
-        'faq',
-        'admin'  # Опциональный модуль
-    ]
+def get_handler_modules() -> List[str]:
+    """Список модулей обработчиков"""
+    return ["start", "menu", "order", "faq", "admin"]  # Убрал cancel_order
