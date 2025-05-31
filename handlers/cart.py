@@ -2,16 +2,18 @@ from aiogram import Router, types, F, Bot
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram import Dispatcher
 from typing import Optional, Dict, List
+from database.cart_repository import CartRepository
+from services.iiko_service import IikoService
 from keyboards import (
     main_keyboard,
     cart_keyboard,
     confirmation_keyboard
 )
-from services.iiko_service import IikoService
-from database.cart_repository import CartRepository
 import logging
 
+logger = logging.getLogger(__name__)
 router = Router()
 
 
@@ -25,9 +27,7 @@ async def show_cart(
         cart_repo: CartRepository,
         state: FSMContext
 ):
-    """
-    Показывает содержимое корзины пользователя
-    """
+    """Показывает содержимое корзины пользователя"""
     try:
         user_id = message.from_user.id
         cart = await cart_repo.get_cart(user_id)
@@ -53,7 +53,7 @@ async def show_cart(
         )
 
     except Exception as e:
-        logging.error(f"Cart error: {e}", exc_info=True)
+        logger.error(f"Cart error: {e}", exc_info=True)
         await message.answer(
             "⚠️ Ошибка загрузки корзины",
             reply_markup=main_keyboard()
@@ -66,9 +66,7 @@ async def add_to_cart(
         state: FSMContext,
         product_id: str
 ):
-    """
-    Добавляет товар в корзину
-    """
+    """Добавляет товар в корзину"""
     try:
         user_id = message.from_user.id
         data = await state.get_data()
@@ -96,7 +94,7 @@ async def add_to_cart(
         )
 
     except Exception as e:
-        logging.error(f"Add to cart error: {e}", exc_info=True)
+        logger.error(f"Add to cart error: {e}", exc_info=True)
         await message.answer(
             "⚠️ Ошибка добавления в корзину",
             reply_markup=main_keyboard()
@@ -107,9 +105,7 @@ async def remove_from_cart(
         callback: types.CallbackQuery,
         cart_repo: CartRepository
 ):
-    """
-    Удаляет товар из корзины
-    """
+    """Удаляет товар из корзины"""
     try:
         item_id = callback.data.split('_')[1]
         await cart_repo.remove_item(callback.from_user.id, item_id)
@@ -120,7 +116,7 @@ async def remove_from_cart(
         )
 
     except Exception as e:
-        logging.error(f"Remove from cart error: {e}", exc_info=True)
+        logger.error(f"Remove from cart error: {e}", exc_info=True)
         await callback.answer("Ошибка удаления товара")
 
 
@@ -128,11 +124,9 @@ async def checkout_cart(
         message: types.Message,
         cart_repo: CartRepository,
         iiko_service: IikoService,
-        bot: Bot
+        state: FSMContext
 ):
-    """
-    Оформляет заказ из корзины
-    """
+    """Оформляет заказ из корзины"""
     try:
         user_id = message.from_user.id
         cart = await cart_repo.get_cart(user_id)
@@ -151,7 +145,7 @@ async def checkout_cart(
         )
 
     except Exception as e:
-        logging.error(f"Checkout error: {e}", exc_info=True)
+        logger.error(f"Checkout error: {e}", exc_info=True)
         await message.answer(
             "⚠️ Ошибка оформления заказа",
             reply_markup=main_keyboard()
@@ -161,11 +155,10 @@ async def checkout_cart(
 async def confirm_order(
         callback: types.CallbackQuery,
         cart_repo: CartRepository,
-        iiko_service: IikoService
+        iiko_service: IikoService,
+        state: FSMContext
 ):
-    """
-    Подтверждает и отправляет заказ в iiko
-    """
+    """Подтверждает и отправляет заказ в iiko"""
     try:
         user_id = callback.from_user.id
         cart = await cart_repo.get_cart(user_id)
@@ -187,7 +180,7 @@ async def confirm_order(
         )
 
     except Exception as e:
-        logging.error(f"Order confirmation error: {e}", exc_info=True)
+        logger.error(f"Order confirmation error: {e}", exc_info=True)
         await callback.message.edit_text(
             "⚠️ Ошибка оформления заказа",
             reply_markup=main_keyboard()
@@ -195,9 +188,7 @@ async def confirm_order(
 
 
 def register_cart_handlers(dp: Dispatcher, cart_repo: CartRepository, iiko_service: IikoService):
-    """
-    Регистрирует обработчики корзины
-    """
+    """Регистрирует обработчики корзины"""
     # Просмотр корзины
     dp.message.register(
         lambda message: show_cart(message, cart_repo, dp.fsm),
@@ -218,12 +209,12 @@ def register_cart_handlers(dp: Dispatcher, cart_repo: CartRepository, iiko_servi
 
     # Оформление заказа
     dp.message.register(
-        lambda message: checkout_cart(message, cart_repo, iiko_service, dp.bot),
+        lambda message: checkout_cart(message, cart_repo, iiko_service, dp.fsm),
         F.text == "💳 Оформить заказ"
     )
 
     # Подтверждение заказа
     dp.callback_query.register(
-        lambda callback: confirm_order(callback, cart_repo, iiko_service),
+        lambda callback: confirm_order(callback, cart_repo, iiko_service, dp.fsm),
         F.data == "confirm_order"
     )

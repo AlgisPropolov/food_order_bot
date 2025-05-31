@@ -94,3 +94,15 @@ Traceback (most recent call last):
     raise RuntimeError("Failed to register some handlers")
 RuntimeError: Failed to register some handlers
 2025-05-29 15:34:46,668 - __main__ - INFO - Сессия бота корректно закрыта
+Конфигурация успешно загружена
+Конфигурация успешно загружена
+Конфигурация успешно загружена
+Конфигурация успешно загружена
+Конфигурация успешно загружена
+Конфигурация успешно загружена
+⛔ Критическая ошибка: IikoService.__init__() got an unexpected keyword argument 'api_password'
+Traceback (most recent call last):
+  File "C:\Users\user\Documents\GitHub\Task\food_order_bot\main.py", line 48, in main
+    iiko_service = IikoService(
+                   ^^^^^^^^^^^^
+TypeError: IikoService.__init__() got an unexpected keyword argument 'api_password'

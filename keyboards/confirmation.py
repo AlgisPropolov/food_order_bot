@@ -1,8 +1,13 @@
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from aiogram.types import ReplyKeyboardMarkup
 
-def confirmation_keyboard() -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Подтвердить", callback_data="confirm_order")
-    builder.button(text="❌ Отменить", callback_data="cancel_order")
-    return builder.as_markup()
+def confirmation_keyboard() -> ReplyKeyboardMarkup:
+    """Клавиатура для подтверждения заказа"""
+    builder = ReplyKeyboardBuilder()
+    builder.button(text="✅ Подтвердить")
+    builder.button(text="❌ Отменить")
+    builder.adjust(2)
+    return builder.as_markup(
+        resize_keyboard=True,
+        input_field_placeholder="Подтвердите заказ"
+    )
